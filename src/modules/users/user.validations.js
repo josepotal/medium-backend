@@ -12,8 +12,8 @@ export default {
         .regex(passwordReg)
         .required(),
       firstName: Joi.string().required(),
-      lasttName: Joi.string().required(),
-      usertName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      userName: Joi.string().required(),
     },
   },
 };

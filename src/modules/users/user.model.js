@@ -5,8 +5,8 @@ import jwt from 'jsonwebtoken';
 import uniqueValidator from 'mongoose-unique-validator';
 
 import { passwordReg } from './user.validations';
-
 import constants from '../../config/constants';
+import Post from '../posts/post.model';
 
 const UserSchema = new Schema(
   {
@@ -50,6 +50,14 @@ const UserSchema = new Schema(
         message: '{VALUE} is not a valid password!',
       },
     },
+    favorites: {
+      posts: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'Post',
+        },
+      ],
+    },
   },
   { timestamps: true },
 );
@@ -58,11 +66,11 @@ UserSchema.plugin(uniqueValidator, {
   message: '{VALUE} already taken!',
 });
 
-UserSchema.pre('save', function (next) {
+UserSchema.pre('save', function(next) {
   if (this.isModified('password')) {
     this.password = this._hashPassword(this.password);
-    return next();
   }
+  return next();
 });
 
 UserSchema.methods = {
@@ -92,6 +100,25 @@ UserSchema.methods = {
       _id: this._id,
       userName: this.userName,
     };
+  },
+  _favorites: {
+    async posts(postId) {
+      if (this.favorites.posts.indexOf(postId) >= 0) {
+        this.favorites.posts.remove(postId);
+        await Post.decFavoriteCount(postId);
+      } else {
+        this.favorites.posts.push(postId);
+        await Post.incFavoriteCount(postId);
+      }
+      return this.save();
+    },
+
+    isPostIsFavorite(postId) {
+      if (this.favorites.posts.indexOf(postId) >= 0) {
+        return true;
+      }
+      return false;
+    },
   },
 };
 

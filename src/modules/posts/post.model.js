@@ -38,7 +38,7 @@ PostSchema.plugin(uniqueValidator, {
   message: '{VALUE} already taken!',
 });
 
-PostSchema.pre('validate', function (next) {
+PostSchema.pre('validate', function(next) {
   this._slugify();
 
   next();
@@ -67,6 +67,19 @@ PostSchema.statics = {
       ...args,
       user,
     });
+  },
+  list({ skip = 0, limit = 5 } = {}) {
+    return this.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('user');
+  },
+  incFavoriteCount(postId) {
+    return this.findByIdAndUpdate(postId, { $inc: { favoriteCount: 1 } });
+  },
+  decFavoriteCount(postId) {
+    return this.findByIdAndUpdate(postId, { $inc: { favoriteCount: -1 } });
   },
 };
 
